@@ -1,0 +1,53 @@
+@page
+@model UserManagementApp.Pages.RegisterModel
+@{
+    ViewData["Title"] = "Register";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <h3 class="mb-4">Sign Up</h3>
+
+        @if (Model.RegistrationSucceeded)
+        {
+            <div class="alert alert-success" role="alert">
+                Registration successful! Please check your e-mail to confirm your account.
+                You can also <a asp-page="Login">sign in</a> right away — confirmation is not required to use the app.
+            </div>
+        }
+        else
+        {
+            <form method="post" novalidate>
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Input.Name" class="form-label">Full name</label>
+                    <input asp-for="Input.Name" class="form-control" autocomplete="name" />
+                    <span asp-validation-for="Input.Name" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Input.Email" class="form-label">E-mail</label>
+                    <input asp-for="Input.Email" class="form-control" autocomplete="email" />
+                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Input.Password" class="form-label">Password</label>
+                    <input asp-for="Input.Password" type="password" class="form-control" autocomplete="new-password" />
+                    <span asp-validation-for="Input.Password" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">Sign Up</button>
+
+                <p class="text-center mt-3">
+                    Already have an account? <a asp-page="Login">Sign in</a>
+                </p>
+            </form>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

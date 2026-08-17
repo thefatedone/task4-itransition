@@ -1,0 +1,151 @@
+@page
+@model UserManagementApp.Pages.Users.IndexModel
+@{
+    ViewData["Title"] = "Users";
+}
+
+<h3 class="mb-3">User Management</h3>
+
+<div id="statusMessage" class="alert d-none" role="alert"></div>
+
+<div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+    <div class="btn-toolbar" role="toolbar" aria-label="User actions">
+        <div class="btn-group me-2">
+            <button type="button" id="btnBlock" class="btn btn-outline-primary" disabled
+                    data-bs-toggle="tooltip" title="Block selected users">
+                Block
+            </button>
+        </div>
+        <div class="btn-group me-2">
+            <button type="button" id="btnUnblock" class="btn btn-outline-secondary" disabled
+                    data-bs-toggle="tooltip" title="Unblock selected users">
+                <i class="bi bi-unlock"></i> &#128275;
+            </button>
+            <button type="button" id="btnDelete" class="btn btn-outline-danger" disabled
+                    data-bs-toggle="tooltip" title="Delete selected users">
+                &#128465;
+            </button>
+            <button type="button" id="btnDeleteUnverified" class="btn btn-outline-warning"
+                    data-bs-toggle="tooltip" title="Delete all unverified users">
+                &#9986;
+            </button>
+        </div>
+    </div>
+
+    <form method="get" class="d-flex">
+        <input type="search" name="Search" value="@Model.Search" class="form-control" placeholder="Filter" style="width: 220px;" />
+    </form>
+</div>
+
+<table class="table table-hover align-middle">
+    <thead>
+        <tr>
+            <th style="width: 40px;">
+                <input type="checkbox" id="selectAll" class="form-check-input" />
+            </th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Status</th>
+            <th>Last seen</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model.UserList)
+        {
+            <tr>
+                <td>
+                    <input type="checkbox" class="form-check-input row-checkbox"
+                           value="@user.Id" data-status="@user.Status" />
+                </td>
+                <td>
+                    @user.Name
+                    @if (user.Id == Model.CurrentUserId)
+                    {
+                        <span class="badge bg-light text-dark border ms-1">you</span>
+                    }
+                </td>
+                <td>@user.Email</td>
+                <td>
+                    @{
+                        var badgeClass = user.Status switch
+                        {
+                            Models.UserStatus.Active => "bg-success",
+                            Models.UserStatus.Blocked => "bg-danger",
+                            _ => "bg-secondary"
+                        };
+                    }
+                    <span class="badge @badgeClass">@user.Status</span>
+                </td>
+                <td data-bs-toggle="tooltip" title="@(user.LastLoginAt?.ToString("dd MMM yyyy, HH:mm:ss") ?? "Never")">
+                    @(user.LastLoginAt.HasValue ? user.LastLoginAt.Value.ToString("dd MMM yyyy, HH:mm") : "Never")
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (!Model.UserList.Any())
+{
+    <p class="text-muted">No users found.</p>
+}
+
+@section Scripts {
+    <script>
+        const antiForgeryToken = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+        function getSelectedIds() {
+            return Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => parseInt(cb.value));
+        }
+
+        function updateToolbarState() {
+            const selected = document.querySelectorAll('.row-checkbox:checked');
+            const hasSelection = selected.length > 0;
+            document.getElementById('btnBlock').disabled = !hasSelection;
+            document.getElementById('btnUnblock').disabled = !hasSelection;
+            document.getElementById('btnDelete').disabled = !hasSelection;
+        }
+
+        document.getElementById('selectAll').addEventListener('change', (e) => {
+            document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = e.target.checked);
+            updateToolbarState();
+        });
+
+        document.querySelectorAll('.row-checkbox').forEach(cb => {
+            cb.addEventListener('change', updateToolbarState);
+        });
+
+        function showStatus(message, isSuccess) {
+            const el = document.getElementById('statusMessage');
+            el.textContent = message;
+            el.className = 'alert ' + (isSuccess ? 'alert-success' : 'alert-danger');
+        }
+
+        async function postAction(handlerName, ids) {
+            // note: named handlers via ?handler=X, sending selected ids as JSON body
+            const response = await fetch(`?handler=${handlerName}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': antiForgeryToken
+                },
+                body: ids !== null ? JSON.stringify(ids) : null
+            });
+
+            const data = await response.json();
+            showStatus(data.message, data.success);
+
+            if (data.success) {
+                setTimeout(() => window.location.reload(), 600);
+            }
+        }
+
+        document.getElementById('btnBlock').addEventListener('click', () => postAction('Block', getSelectedIds()));
+        document.getElementById('btnUnblock').addEventListener('click', () => postAction('Unblock', getSelectedIds()));
+        document.getElementById('btnDelete').addEventListener('click', () => postAction('Delete', getSelectedIds()));
+        document.getElementById('btnDeleteUnverified').addEventListener('click', () => postAction('DeleteUnverified', null));
+
+        // Bootstrap tooltips
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        [...tooltipTriggerList].map(el => new bootstrap.Tooltip(el));
+    </script>
+}
