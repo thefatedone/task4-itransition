@@ -1,0 +1,24 @@
+## .NET / Visual Studio build outputs
+bin/
+obj/
+out/
+
+## IDE
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+
+## NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+
+## Misc
+*.log
+*.tmp
+*.swp
+.DS_Store
+Thumbs.db
