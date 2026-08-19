@@ -54,7 +54,7 @@ public class EmailBackgroundService : BackgroundService, IEmailSender
         message.Body = new TextPart("html") { Text = job.HtmlBody };
 
         using var client = new SmtpClient();
-        await client.ConnectAsync(_settings.SmtpHost, 465, SecureSocketOptions.SslOnConnect, ct);
+        await client.ConnectAsync(_settings.SmtpHost, _settings.SmtpPort, SecureSocketOptions.SslOnConnect, ct);
         await client.AuthenticateAsync(_settings.SenderEmail, _settings.SenderPassword, ct);
         await client.SendAsync(message, ct);
         await client.DisconnectAsync(true, ct);
