@@ -6,6 +6,9 @@ using UserManagementApp.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.WebHost.UseStaticWebAssets();
+builder.Configuration.GetSection("hostBuilder")["reloadConfigOnChange"] = "false";
+
 builder.Services.AddRazorPages(options =>
 {
     // important: only authenticated users may access anything under /Users
